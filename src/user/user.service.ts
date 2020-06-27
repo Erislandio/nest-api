@@ -1,16 +1,19 @@
 import { LoginUserDto } from './dto/login-user.dto';
-import { LoginInterface } from './../typings/global.d';
+import { LoginInterface, SwitchAccount } from './../typings/global.d';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as  bcrypt from 'bcrypt'
 import { User } from './user.model'
+import { statusError } from 'src/utils/status';
+import { Account } from 'src/account/account.model';
 
 @Injectable()
 export class UserService {
 
     constructor(
         @InjectModel('User') private readonly userModel: Model<User>,
+        @InjectModel('Account') private readonly accountModel: Model<Account>
     ) { }
 
     public async create(doc: User): Promise<User> {
@@ -25,10 +28,7 @@ export class UserService {
         }
 
         const newUser = await new this.userModel(doc).save().catch((error) => {
-            throw new HttpException({
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-                error: error.message
-            }, HttpStatus.INTERNAL_SERVER_ERROR)
+            return statusError(error)
         })
 
         newUser.password = null;
@@ -44,17 +44,46 @@ export class UserService {
             return users
 
         } catch (error) {
-            throw new HttpException({
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-                error: error.message
-            }, HttpStatus.INTERNAL_SERVER_ERROR)
+            statusError(error)
         }
     }
 
-    public async findById(id: number): Promise<User> {
+    public async findById(id: string | any): Promise<User> {
 
-        const user = await this.userModel.findById(id).select('-password')
-        return user
+        try {
+            const user = await this.userModel.findById(id).select('-password');
+            const accounts = await this.accountModel.find().where('userId').in(id).select('-appToken');
+
+            user.accounts = accounts
+
+            return user
+        } catch (error) {
+            statusError(error)
+        }
+
+    }
+
+    public async switchAccount(switchAccount: SwitchAccount): Promise<User> {
+
+        try {
+
+            const account = await this.accountModel.findById(switchAccount.accountId);
+
+            return this.userModel.findByIdAndUpdate(switchAccount.userId, {
+                account,
+            }, { new: false }).then(res => {
+                if (res) {
+
+                    res.account = account
+                    return res
+                }
+
+                return {}
+            }).catch(error => statusError(error))
+
+        } catch (error) {
+            statusError(error)
+        }
 
     }
 
@@ -62,8 +91,6 @@ export class UserService {
         const { password, email } = userLogin
 
         const user = await this.findByEmail(email);
-
-        console.log(user)
 
         if (!user) {
             throw new HttpException('Invalid credentials - User not found', HttpStatus.UNAUTHORIZED);
@@ -97,7 +124,6 @@ export class UserService {
             callback(null, callback)
 
         })
-
     }
 
     private sanitizeUser(user: User): User {

@@ -15,7 +15,7 @@ import { AuthController } from './auth.controller';
     JwtModule.register({
       secretOrPrivateKey: process.env.SECRET_KEY,
       signOptions: {
-        expiresIn: 3600
+        expiresIn: '24h'
       }
     }),
     UserModule,

@@ -3,6 +3,6 @@ export interface JwtPayload {
 }
 
 export interface JwtResponse {
-    expiresIn: number;
+    expiresIn: number | string;
     token: string;
 }

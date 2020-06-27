@@ -54,7 +54,7 @@ export class AuthService {
         let jwt = this.JwtService.sign(data);
 
         return {
-            expiresIn: 3600,
+            expiresIn: '24h',
             token: jwt
         }
     }

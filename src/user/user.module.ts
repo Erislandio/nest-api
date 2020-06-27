@@ -1,3 +1,4 @@
+import { AccountSchema } from './../account/account.model';
 import { PassportModule } from '@nestjs/passport';
 import { UserSchema } from './user.model';
 import { Module } from '@nestjs/common';
@@ -11,12 +12,16 @@ import { MongooseModule } from '@nestjs/mongoose'
       {
         name: 'User',
         schema: UserSchema
+      },
+      {
+        name: "Account",
+        schema: AccountSchema
       }
     ]),
     PassportModule.register({
       defaultStrategy: 'jwt',
       session: false
-    })
+    }),
   ],
   providers: [UserService],
   controllers: [UserController],
