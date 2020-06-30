@@ -1,3 +1,4 @@
+import { AccountDto } from './dto/account.dto';
 import { async } from 'rxjs/internal/scheduler/async';
 import { statusError } from 'src/utils/status';
 import { Injectable } from '@nestjs/common';
@@ -11,7 +12,7 @@ export class AccountService {
         @InjectModel('Account') private readonly accountModel: Model<Account>
     ) { }
 
-    public async create(account: Account): Promise<Account> {
+    public async create(account: Account | AccountDto): Promise<Account> {
 
         try {
 

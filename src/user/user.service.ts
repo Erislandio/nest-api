@@ -1,3 +1,4 @@
+import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { LoginInterface, SwitchAccount } from './../typings/global.d';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
@@ -16,7 +17,7 @@ export class UserService {
         @InjectModel('Account') private readonly accountModel: Model<Account>
     ) { }
 
-    public async create(doc: User): Promise<User> {
+    public async create(doc: User | CreateUserDto): Promise<User> {
 
         const user = await this.findByEmail(doc.email);
 
@@ -61,6 +62,25 @@ export class UserService {
             statusError(error)
         }
 
+    }
+
+    public async logout(userId: string): Promise<User> {
+        try {
+
+            return this.userModel.findByIdAndUpdate(userId, {
+                account: null,
+            }, { new: false }).then(res => {
+                if (res) {
+                    res.account = null
+                    return res
+                }
+
+                return {}
+            }).catch(error => statusError(error))
+
+        } catch (error) {
+            return statusError(error)
+        }
     }
 
     public async switchAccount(switchAccount: SwitchAccount): Promise<User> {

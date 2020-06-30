@@ -1,17 +1,21 @@
+import { AccountDto } from './dto/account.dto';
 import { statusError } from 'src/utils/status';
 import { AccountService } from './account.service';
 import { Controller, Post, Body, Delete, UseGuards, HttpException, Get } from '@nestjs/common';
 import { Account } from './account.model';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('account')
+@ApiTags("account")
+@ApiBearerAuth()
 export class AccountController {
 
     constructor(private service: AccountService) { }
 
     @Post('create')
     @UseGuards(AuthGuard())
-    public async create(@Body() account: Account): Promise<Account> {
+    public async create(@Body() account: AccountDto): Promise<Account> {
 
         const isValid = await this.service.isValidAccountName(account.userId, account.name);
 
@@ -46,7 +50,7 @@ export class AccountController {
 
     @Get('index')
     @UseGuards(AuthGuard())
-    public index(): Promise<Account[]> {
+    public index(): Promise<AccountDto[]> {
         return this.service.index()
     }
 
